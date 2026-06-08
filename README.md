@@ -1,7 +1,35 @@
-# 🛰️ Schema Automated Mapping Engine
 
-This repository contains the source code for the Schema Automated Mapping Engine (SAME).
-SAME is a tool for automatically generating mappings between schema registries.
+# SAME — Schema Automated Mapping Engine by Kannika.io
+
+> SAME is an open-source CLI tool that automatically maps schemas between different Schema Registry instances.  
+> Developed and maintained by [Kannika.io](https://kannika.io) — the Kafka reliability platform.
+
+SAME eliminates the manual work of migrating or syncing Avro schemas across registries — whether you're consolidating environments, migrating to Confluent Cloud, or keeping staging in sync with production.
+
+## What is Kannika.io?
+
+[Kannika.io](https://kannika.io) builds tools for Kafka observability, reliability, and schema management. SAME is our open-source CLI for teams managing schemas across multiple Schema Registry environments.
+
+---
+
+## Features
+
+- **Automatic schema mapping** — detect and map equivalent schemas between two registries
+- **Conflict resolution strategies** — choose from `strict`, `pick-first`, `pick-lowest-id`, or `pick-highest-id`
+- **Offline mode** — work with cached schemas without a live registry connection
+- **Force-update support** — overwrite existing mappings when schemas evolve
+- **CI/CD-friendly** — drive everything via YAML config files, no interactive prompts needed
+- **Secure credential storage** — uses the OS keyring (no plaintext secrets in config)
+- **Cross-platform** — Linux, macOS, and Windows supported
+
+## Protocol Support
+
+| Format | Status |
+|---|---|
+| Avro | ✅ Fully supported |
+| JSON Schema | 🚧 Planned |
+| Protocol Buffers | 🚧 Planned |
+
 
 ## 👩‍💻 Usage
 
