@@ -4,6 +4,7 @@ use std::ops::Deref;
 
 use apache_avro::rabin::Rabin;
 use apache_avro::Schema as AvroSchema;
+use digest::Digest;
 
 use crate::mapping::resolve::{Resolution, ResolveSchemaReferences};
 use crate::registry::{SchemaType, Subject};
@@ -12,15 +13,15 @@ use crate::registry::{SchemaType, Subject};
 pub enum Fingerprint {
     Avro(AvroFingerprint),
     Protobuf,
-    Json,
+    Json(JsonFingerprint),
 }
 
 impl Fingerprint {
     pub fn get_value_opt(&self) -> Option<String> {
         match self {
             Fingerprint::Avro(fingerprint) => Some(fingerprint.to_string()),
+            Fingerprint::Json(fingerprint) => Some(fingerprint.to_string()),
             Fingerprint::Protobuf => None,
-            Fingerprint::Json => None,
         }
     }
 }
@@ -29,6 +30,9 @@ impl Fingerprint {
 pub enum FingerprintError {
     #[error(transparent)]
     InvalidAvroSchema(#[from] apache_avro::Error),
+
+    #[error("Invalid JSON schema: {0}")]
+    InvalidJsonSchema(#[from] serde_json::Error),
 }
 
 pub trait ToFingerprint {
@@ -97,7 +101,10 @@ impl ToFingerprint for SubjectFingerPrintBuilder {
 
                 Ok(Fingerprint::Avro(fingerprint))
             }
-            SchemaType::Json => Ok(Fingerprint::Json),
+            SchemaType::Json => {
+                let fingerprint = JsonFingerprint::from_schema_str(self.subject.schema.as_str())?;
+                Ok(Fingerprint::Json(fingerprint))
+            }
             SchemaType::Protobuf => Ok(Fingerprint::Protobuf),
         }
     }
@@ -146,9 +153,60 @@ impl Debug for AvroFingerprint {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub struct JsonFingerprint {
+    pub bytes: Vec<u8>,
+}
+
+impl JsonFingerprint {
+    /// Fingerprint a JSON Schema by reducing it to canonical JSON
+    /// (lexicographic keys, integer-valued floats normalized, compact)
+    /// and taking a Rabin fingerprint over the canonical bytes.
+    pub fn from_schema_str(schema: &str) -> Result<JsonFingerprint, FingerprintError> {
+        let value: serde_json::Value = serde_json::from_str(schema)?;
+        let canonical = jsonschema::canonical::json::to_string(&value)
+            .map_err(|e| serde_json::Error::io(std::io::Error::other(e.to_string())))?;
+
+        let mut hasher = Rabin::default();
+        hasher.update(canonical.as_bytes());
+        let out = hasher.finalize();
+
+        Ok(JsonFingerprint {
+            bytes: out.to_vec(),
+        })
+    }
+}
+
+impl Display for JsonFingerprint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for byte in self.deref() {
+            write!(f, "{:02x}", byte)?;
+        }
+        Ok(())
+    }
+}
+
+impl Debug for JsonFingerprint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for byte in self.deref() {
+            write!(f, "{:02x}", byte)?;
+        }
+        Ok(())
+    }
+}
+
+impl Deref for JsonFingerprint {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        &self.bytes
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::mapping::fingerprint::AvroFingerprint;
+    use crate::mapping::fingerprint::JsonFingerprint;
     use crate::AvroSchema;
 
     #[test]
@@ -339,5 +397,54 @@ mod tests {
             AvroFingerprint::from_schema(&one),
             AvroFingerprint::from_schema(&two)
         );
+    }
+
+    #[test]
+    fn json_display_should_print_fingerprint() {
+        let schema = r#"{ "type": "object", "properties": { "a": { "type": "integer" } } }"#;
+        let fingerprint = JsonFingerprint::from_schema_str(schema).unwrap();
+        // 16 lowercase hex chars (8 bytes)
+        assert_eq!(fingerprint.to_string().len(), 16);
+        assert!(fingerprint.to_string().chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn same_json_schemas_should_have_same_fingerprint() {
+        // Differ only in key order, whitespace, and 1.0 vs 1 — canonicalization erases all three.
+        let one = r#"{ "type": "object", "properties": { "a": { "type": "number", "minimum": 1.0 } } }"#;
+        let two = r#"{"properties":{"a":{"minimum":1,"type":"number"}},"type":"object"}"#;
+        assert_eq!(
+            JsonFingerprint::from_schema_str(one).unwrap(),
+            JsonFingerprint::from_schema_str(two).unwrap()
+        );
+    }
+
+    #[test]
+    fn different_json_schemas_should_have_different_fingerprint() {
+        let one = r#"{ "type": "object", "properties": { "a": { "type": "string" } } }"#;
+        let two = r#"{ "type": "object", "properties": { "a": { "type": "integer" } } }"#;
+        assert_ne!(
+            JsonFingerprint::from_schema_str(one).unwrap(),
+            JsonFingerprint::from_schema_str(two).unwrap()
+        );
+    }
+
+    /// v1 non-goal guard: annotations are NOT stripped, so a description-only edit
+    /// currently produces a different fingerprint (a safe false-miss). This test
+    /// documents intended v1 behavior and guards against accidental change.
+    #[test]
+    fn json_description_edit_changes_fingerprint_in_v1() {
+        let one = r#"{ "type": "object", "description": "one" }"#;
+        let two = r#"{ "type": "object", "description": "two" }"#;
+        assert_ne!(
+            JsonFingerprint::from_schema_str(one).unwrap(),
+            JsonFingerprint::from_schema_str(two).unwrap()
+        );
+    }
+
+    #[test]
+    fn invalid_json_schema_returns_error() {
+        let result = JsonFingerprint::from_schema_str("{ not valid json");
+        assert!(result.is_err());
     }
 }
