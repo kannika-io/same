@@ -51,11 +51,23 @@ impl SchemaRegistryIndex {
         match schema_subject.schema_type {
             SchemaType::Avro => self.index_avro(schema_subject, resolver),
             SchemaType::Protobuf => Ok(()),
-            SchemaType::Json => Ok(()),
+            SchemaType::Json => self.index_json(schema_subject, resolver),
         }
     }
 
     fn index_avro(
+        &mut self,
+        schema_subject: &Subject,
+        resolver: &impl ResolveSchemaReferences,
+    ) -> Result<(), SchemaRegistryIndexError> {
+        let schema = FingerprintedSchema::from_subject(schema_subject.clone(), resolver)?;
+
+        self.insert(schema);
+
+        Ok(())
+    }
+
+    fn index_json(
         &mut self,
         schema_subject: &Subject,
         resolver: &impl ResolveSchemaReferences,
@@ -229,7 +241,7 @@ mod tests {
     }
 
     #[test]
-    fn index_json_schema_is_ignored() {
+    fn find_json_schema_by_fingerprint() {
         let mut index = SchemaRegistryIndex::new();
         let schema_subject = jacksonfruit_subject();
         let fingerprint = SubjectFingerPrintBuilder::new(schema_subject.clone())
@@ -237,10 +249,11 @@ mod tests {
             .unwrap();
 
         index.index(&schema_subject, &MockResolver::new()).unwrap();
+        let schema =
+            FingerprintedSchema::from_subject(schema_subject, &MockResolver::new()).unwrap();
+        let expected: Candidates = Candidates::PerfectMatch(schema);
 
-        let results = index.find_by_fingerprint(&fingerprint);
-
-        assert_eq!(results, Candidates::None);
+        assert_eq!(index.find_by_fingerprint(&fingerprint), expected);
     }
 
     /// CYM-1200: When multiple schema versions share the same fingerprint (e.g. structurally
