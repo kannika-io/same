@@ -47,8 +47,20 @@ Mapping errors are asymmetric:
 - A **false match** (fingerprint collision between genuinely different schemas)
   writes the wrong target ID — potential data corruption.
 
-v1 is therefore deliberately conservative: it errs toward false misses. Anything
-that could collapse distinct schemas together is deferred.
+v1 is deliberately conservative and errs toward false misses **for
+reference-free schemas** — the only remaining intra-type collision vector there is
+a 64-bit Rabin collision (negligible).
+
+**Known exception — `$ref` content-blindness is a false-match vector.** Unlike the
+Avro path (which folds referenced *content* into the fingerprint via `parse_list`),
+v1 fingerprints only the schema body plus the literal `$ref` string; it does not
+inline referenced subject content. Two schemas with byte-identical bodies and
+identical `$ref` strings therefore fingerprint identically **even if that `$ref`
+resolves to different content in the two registries** — a genuine false match that
+would rewrite a reference to the wrong target. This is accepted for v1 only because
+JSON-Schema references are expected to be rare in these deployments; the follow-up
+that folds `$ref` content (the `ResolveSchemaReferences` resolver is already wired
+up) closes it. See the `$ref` non-goal below.
 
 ## Design
 
@@ -115,10 +127,13 @@ Deferred, and documented as known limitations:
   tree-walk that deletes the annotation vocabulary.
 - **No `$ref` content folding.** The `$ref` value (a URL/string) is fingerprinted
   verbatim. Reference-free schemas fingerprint perfectly; schemas with references
-  match iff their `$ref` strings match. Content-blindness across references is a
-  documented v1 limitation — a follow-up can inline referenced subject content via
-  the existing `ResolveSchemaReferences` resolver, matching Avro's reference
-  folding.
+  match iff their `$ref` strings match. Unlike the annotation non-goal above, this
+  is **not** merely a false-miss — it is a false-**match** vector (see the Safety
+  principle exception): identical bodies with identical `$ref` strings collide even
+  when the referenced content differs between registries. Accepted for v1 only
+  because references are expected to be rare here; a follow-up inlines referenced
+  subject content via the existing `ResolveSchemaReferences` resolver, matching
+  Avro's reference folding and closing the false-match path.
 - **Protobuf** stays stubbed (`Fingerprint::Protobuf`, `index()` returns `Ok(())`).
 
 ## Testing
