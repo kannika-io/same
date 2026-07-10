@@ -30,9 +30,8 @@ SAME eliminates the manual work of migrating or syncing Avro schemas across regi
 | JSON Schema | ✅ Supported¹ |
 | Protocol Buffers | 🚧 Planned |
 
-¹ JSON Schema is matched by a canonical fingerprint (sorted keys, normalized
-numbers). Schemas that use `$ref` are matched on the reference string, not yet on
-referenced content — see [Supported Protocols](#-supported-protocols).
+¹ JSON Schema is matched by a canonical fingerprint (sorted keys, normalized numbers).
+Schemas that use `$ref` are matched on the reference string, not yet on referenced content — see [Supported Protocols](#-supported-protocols).
 
 
 ## 👩‍💻 Usage
@@ -147,20 +146,15 @@ Following protocols are supported:
 - Avro
 - JSON Schema
 
-JSON schemas are matched by a canonical fingerprint: the schema is reduced to a
-deterministic canonical form (object keys sorted, integer-valued numbers
-normalized, whitespace stripped) and hashed. Two schemas that differ only in key
-order, formatting, or numeric representation map to each other.
+JSON schemas are matched by a canonical fingerprint: the schema is reduced to a deterministic canonical form (object keys sorted, integer-valued numbers normalized, whitespace stripped) and hashed.
+Two schemas that differ only in key order, formatting, or numeric representation map to each other.
 
 Current limitations:
 
-- Annotations (`title`, `description`, `$comment`, `default`, `examples`, …) are
-  part of the fingerprint, so editing them makes a schema look unmapped (it is
-  reported as a miss, never mapped to the wrong target).
-- A `$ref` is matched on its reference string, not on the referenced schema's
-  content. Reference folding is planned.
-- Unparseable JSON surfaces as an indexing error; use `--ignore-indexing-errors`
-  to skip such subjects.
+- Annotations (`title`, `description`, `$comment`, `default`, `examples`, …) are part of the fingerprint, so editing them makes a schema look unmapped (it is reported as a miss, never mapped to the wrong target).
+- A `$ref` is matched on its reference string, not on the referenced schema's content.
+  Reference folding is planned.
+- Unparseable JSON surfaces as an indexing error; use `--ignore-indexing-errors` to skip such subjects.
 
 These are ignored for now:
 
