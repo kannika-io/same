@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://other.example/schemas/order.json",
+  "title": "app42.Order",
+  "type": "object",
+  "properties": {
+    "orderId": { "type": "string" },
+    "customer": { "$ref": "io/kannika/Customer.schema.json" },
+    "product": { "$ref": "io/kannika/Product.schema.json" }
+  },
+  "required": ["orderId", "customer", "product"]
+}

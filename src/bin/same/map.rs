@@ -16,6 +16,8 @@ use same::context::{
     DownloadAllSchemaFilesOpts, DownloadProbe, LocalContextRepository, SchemaRegistryConfig,
 };
 use same::mapping::conflict::ConflictResolutionStrategy;
+use same::mapping::fingerprint::FingerprintOpts;
+use same::mapping::json::{DEFAULT_IGNORED_KEYWORDS, JsonCanonicalOpts};
 use same::mapping::{map_schemas, MapSchemasOpts};
 use same::registry::{SchemaId, SchemaReference, SchemaVersion, SubjectName};
 
@@ -52,6 +54,16 @@ pub struct MapCommand {
 
     #[arg(long)]
     on_conflict: ConflictResolutionStrategy,
+
+    /// JSON Schema keywords to ignore when fingerprinting.
+    /// Passing the flag replaces the default list; repeat it or separate keywords with commas
+    #[arg(
+        long,
+        value_name = "KEYWORD",
+        value_delimiter = ',',
+        default_values_t = DEFAULT_IGNORED_KEYWORDS.iter().map(|k| k.to_string())
+    )]
+    json_ignore_keyword: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -156,6 +168,11 @@ impl MapCommand {
             MapSchemasOpts {
                 ignore_indexing_errors: self.ignore_indexing_errors,
                 on_conflict: self.on_conflict,
+                fingerprint: FingerprintOpts {
+                    json: JsonCanonicalOpts {
+                        ignored_keywords: self.json_ignore_keyword.iter().cloned().collect(),
+                    },
+                },
             },
         )
         .await?;
