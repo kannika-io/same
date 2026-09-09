@@ -113,7 +113,7 @@ with the current working directory mounted to `/usr/var/same`:
 ```sh
 $ docker run \
   -v .:/usr/var/same \
-  quay.io/kannika/same:0.5.0 map \
+  quay.io/kannika/same:0.6.0 map \
   --from=source \
   --to=target \
   --ignore-indexing-errors \
