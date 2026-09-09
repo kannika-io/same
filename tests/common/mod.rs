@@ -26,7 +26,11 @@ impl TestEnv {
         let client = SchemaRegistryClient::new(&container.get_schema_registry_url())?;
         let registry = TestSchemaRegistry::Containerized(container);
         let cache_dir = tempfile::tempdir()?;
-        Ok(Self { registry, client, cache_dir })
+        Ok(Self {
+            registry,
+            client,
+            cache_dir,
+        })
     }
 
     pub fn new_remote(url: &str) -> anyhow::Result<Self> {
@@ -34,7 +38,11 @@ impl TestEnv {
         let registry = TestSchemaRegistry::Remote(remote);
         let client = SchemaRegistryClient::new(url)?;
         let cache_dir = tempfile::tempdir()?;
-        Ok(Self { registry, client, cache_dir })
+        Ok(Self {
+            registry,
+            client,
+            cache_dir,
+        })
     }
 
     pub async fn delete_all_subjects(&self) -> anyhow::Result<()> {
@@ -104,6 +112,33 @@ impl TestEnv {
             schema_type: Some(SchemaType::Avro),
             references,
             ..Default::default()
+        };
+        self.register_schema(subject_name, request).await
+    }
+
+    pub async fn register_json_schema(
+        &self,
+        subject_name: &str,
+        schema: &str,
+    ) -> anyhow::Result<Subject> {
+        let request = RegisterSchema {
+            schema: schema.to_string(),
+            schema_type: Some(SchemaType::Json),
+            ..Default::default()
+        };
+        self.register_schema(subject_name, request).await
+    }
+
+    pub async fn register_json_schema_with_references(
+        &self,
+        subject_name: &str,
+        schema: &str,
+        references: Vec<SchemaReference>,
+    ) -> anyhow::Result<Subject> {
+        let request = RegisterSchema {
+            schema: schema.to_string(),
+            schema_type: Some(SchemaType::Json),
+            references,
         };
         self.register_schema(subject_name, request).await
     }

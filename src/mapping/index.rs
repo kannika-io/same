@@ -1,6 +1,6 @@
 use multimap::MultiMap;
 
-use crate::mapping::fingerprint::{Fingerprint, SubjectFingerPrintBuilder, ToFingerprint};
+use crate::mapping::fingerprint::{Fingerprint, FingerprintOpts};
 use crate::mapping::resolve::ResolveSchemaReferences;
 use crate::registry::{SchemaId, SchemaReference, SchemaType, SchemaVersion, Subject, SubjectName};
 
@@ -47,36 +47,17 @@ impl SchemaRegistryIndex {
         &mut self,
         schema_subject: &Subject,
         resolver: &impl ResolveSchemaReferences,
+        opts: &FingerprintOpts,
     ) -> Result<(), SchemaRegistryIndexError> {
         match schema_subject.schema_type {
-            SchemaType::Avro => self.index_avro(schema_subject, resolver),
+            SchemaType::Avro | SchemaType::Json => {
+                let schema =
+                    FingerprintedSchema::from_subject(schema_subject.clone(), resolver, opts)?;
+                self.insert(schema);
+                Ok(())
+            }
             SchemaType::Protobuf => Ok(()),
-            SchemaType::Json => self.index_json(schema_subject, resolver),
         }
-    }
-
-    fn index_avro(
-        &mut self,
-        schema_subject: &Subject,
-        resolver: &impl ResolveSchemaReferences,
-    ) -> Result<(), SchemaRegistryIndexError> {
-        let schema = FingerprintedSchema::from_subject(schema_subject.clone(), resolver)?;
-
-        self.insert(schema);
-
-        Ok(())
-    }
-
-    fn index_json(
-        &mut self,
-        schema_subject: &Subject,
-        resolver: &impl ResolveSchemaReferences,
-    ) -> Result<(), SchemaRegistryIndexError> {
-        let schema = FingerprintedSchema::from_subject(schema_subject.clone(), resolver)?;
-
-        self.insert(schema);
-
-        Ok(())
     }
 
     fn insert(&mut self, reference: FingerprintedSchema) {
@@ -102,17 +83,15 @@ impl FingerprintedSchema {
     pub fn from_subject(
         subject: Subject,
         resolver: &impl ResolveSchemaReferences,
+        opts: &FingerprintOpts,
     ) -> Result<Self, SchemaRegistryIndexError> {
-        let fingerprint = SubjectFingerPrintBuilder::new(subject.clone())
-            .resolve_references_from(resolver)
-            .to_fingerprint()
-            .map_err(|err| {
-                SchemaRegistryIndexError::FailedToCalculateFingerprint(
-                    subject.subject.clone(),
-                    subject.version.clone(),
-                    err.to_string(),
-                )
-            })?;
+        let fingerprint = Fingerprint::for_subject(&subject, resolver, opts).map_err(|err| {
+            SchemaRegistryIndexError::FailedToCalculateFingerprint(
+                subject.subject.clone(),
+                subject.version.clone(),
+                err.to_string(),
+            )
+        })?;
 
         Ok(FingerprintedSchema {
             subject: subject.subject.clone(),
@@ -141,7 +120,7 @@ impl<'a> IntoIterator for &'a SchemaRegistryIndex {
 
 #[cfg(test)]
 mod tests {
-    use crate::mapping::fingerprint::{SubjectFingerPrintBuilder, ToFingerprint};
+    use crate::mapping::fingerprint::{Fingerprint, FingerprintOpts};
     use crate::mapping::index::{Candidates, FingerprintedSchema, SchemaRegistryIndex};
     use crate::mapping::resolve::{Resolution, ResolutionError, ResolveSchemaReferences};
     use crate::registry::{SchemaId, SchemaReference, SchemaType, SchemaVersion, Subject};
@@ -176,13 +155,26 @@ mod tests {
     fn find_avro_schema_by_fingerprint() {
         let mut index = SchemaRegistryIndex::new();
         let schema_subject = avrocado_subject();
-        let fingerprint = SubjectFingerPrintBuilder::new(schema_subject.clone())
-            .to_fingerprint()
-            .unwrap();
+        let fingerprint = Fingerprint::for_subject(
+            &schema_subject,
+            &MockResolver::new(),
+            &FingerprintOpts::default(),
+        )
+        .unwrap();
 
-        index.index(&schema_subject, &MockResolver::new()).unwrap();
-        let schema =
-            FingerprintedSchema::from_subject(schema_subject, &MockResolver::new()).unwrap();
+        index
+            .index(
+                &schema_subject,
+                &MockResolver::new(),
+                &FingerprintOpts::default(),
+            )
+            .unwrap();
+        let schema = FingerprintedSchema::from_subject(
+            schema_subject,
+            &MockResolver::new(),
+            &FingerprintOpts::default(),
+        )
+        .unwrap();
         let expected: Candidates = Candidates::PerfectMatch(schema);
 
         assert_eq!(index.find_by_fingerprint(&fingerprint), expected);
@@ -213,14 +205,20 @@ mod tests {
 
         let schema_subject = order_subject();
 
-        let fingerprint = SubjectFingerPrintBuilder::new(schema_subject.clone())
-            .resolve_references_from(&resolver)
-            .to_fingerprint()
+        let fingerprint =
+            Fingerprint::for_subject(&schema_subject, &resolver, &FingerprintOpts::default())
+                .unwrap();
+
+        index
+            .index(&schema_subject, &resolver, &FingerprintOpts::default())
             .unwrap();
 
-        index.index(&schema_subject, &resolver).unwrap();
-
-        let schema = FingerprintedSchema::from_subject(schema_subject, &resolver).unwrap();
+        let schema = FingerprintedSchema::from_subject(
+            schema_subject,
+            &resolver,
+            &FingerprintOpts::default(),
+        )
+        .unwrap();
         let expected: Candidates = Candidates::PerfectMatch(schema);
 
         assert_eq!(index.find_by_fingerprint(&fingerprint), expected);
@@ -230,10 +228,19 @@ mod tests {
     fn index_protobuf_schema_is_ignored() {
         let mut index = SchemaRegistryIndex::new();
         let schema_subject = potatobuf_subject();
-        let fingerprint = SubjectFingerPrintBuilder::new(schema_subject.clone())
-            .to_fingerprint()
+        let fingerprint = Fingerprint::for_subject(
+            &schema_subject,
+            &MockResolver::new(),
+            &FingerprintOpts::default(),
+        )
+        .unwrap();
+        index
+            .index(
+                &schema_subject,
+                &MockResolver::new(),
+                &FingerprintOpts::default(),
+            )
             .unwrap();
-        index.index(&schema_subject, &MockResolver::new()).unwrap();
 
         let results = index.find_by_fingerprint(&fingerprint);
 
@@ -244,16 +251,168 @@ mod tests {
     fn find_json_schema_by_fingerprint() {
         let mut index = SchemaRegistryIndex::new();
         let schema_subject = jacksonfruit_subject();
-        let fingerprint = SubjectFingerPrintBuilder::new(schema_subject.clone())
-            .to_fingerprint()
-            .unwrap();
+        let fingerprint = Fingerprint::for_subject(
+            &schema_subject,
+            &MockResolver::new(),
+            &FingerprintOpts::default(),
+        )
+        .unwrap();
 
-        index.index(&schema_subject, &MockResolver::new()).unwrap();
-        let schema =
-            FingerprintedSchema::from_subject(schema_subject, &MockResolver::new()).unwrap();
+        index
+            .index(
+                &schema_subject,
+                &MockResolver::new(),
+                &FingerprintOpts::default(),
+            )
+            .unwrap();
+        let schema = FingerprintedSchema::from_subject(
+            schema_subject,
+            &MockResolver::new(),
+            &FingerprintOpts::default(),
+        )
+        .unwrap();
         let expected: Candidates = Candidates::PerfectMatch(schema);
 
         assert_eq!(index.find_by_fingerprint(&fingerprint), expected);
+    }
+
+    #[test]
+    fn json_schemas_differing_only_in_annotations_share_fingerprint() {
+        let mut index = SchemaRegistryIndex::new();
+        let resolver = MockResolver::new();
+
+        let source = json_subject("order-placed-value", "1", "101", ORDER_PLACED_A);
+        let target = json_subject("order-placed-value", "2", "102", ORDER_PLACED_B);
+        index
+            .index(&source, &resolver, &FingerprintOpts::default())
+            .unwrap();
+        index
+            .index(&target, &resolver, &FingerprintOpts::default())
+            .unwrap();
+
+        let fingerprint =
+            Fingerprint::for_subject(&source, &MockResolver::new(), &FingerprintOpts::default())
+                .unwrap();
+
+        match index.find_by_fingerprint(&fingerprint) {
+            Candidates::Multiple(schemas) => {
+                let ids: std::collections::HashSet<SchemaId> =
+                    schemas.iter().map(|s| s.id).collect();
+                assert_eq!(
+                    ids.len(),
+                    2,
+                    "both title variants should share the fingerprint"
+                );
+            }
+            other => panic!("expected both JSON schemas under one fingerprint, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn json_schemas_with_different_structure_do_not_share_fingerprint() {
+        let mut index = SchemaRegistryIndex::new();
+        let resolver = MockResolver::new();
+
+        let target = json_subject(
+            "order-placed-value",
+            "1",
+            "101",
+            &ORDER_PLACED_A.replace(
+                r#""eventId": { "type": "string" }"#,
+                r#""eventId": { "type": "integer" }"#,
+            ),
+        );
+        index
+            .index(&target, &resolver, &FingerprintOpts::default())
+            .unwrap();
+
+        let fingerprint = Fingerprint::for_subject(
+            &json_subject("x", "1", "1", ORDER_PLACED_A),
+            &MockResolver::new(),
+            &FingerprintOpts::default(),
+        )
+        .unwrap();
+
+        assert_eq!(index.find_by_fingerprint(&fingerprint), Candidates::None);
+    }
+
+    #[test]
+    fn find_json_schema_with_references_by_fingerprint() {
+        let customer = json_subject("customer-json", "1", "201", JSON_CUSTOMER);
+        let mut resolver = MockResolver::new();
+        resolver.mapping.push((
+            SchemaReference {
+                name: "customer.json".to_string(),
+                subject: "customer-json".to_string(),
+                version: "1".parse::<SchemaVersion>().unwrap(),
+            },
+            customer,
+        ));
+
+        let mut order = json_subject("order-json", "1", "202", JSON_ORDER);
+        order.references = vec![SchemaReference {
+            name: "customer.json".to_string(),
+            subject: "customer-json".to_string(),
+            version: "1".parse::<SchemaVersion>().unwrap(),
+        }];
+
+        let mut index = SchemaRegistryIndex::new();
+        index
+            .index(&order, &resolver, &FingerprintOpts::default())
+            .unwrap();
+
+        let fingerprint =
+            Fingerprint::for_subject(&order, &resolver, &FingerprintOpts::default()).unwrap();
+        let expected = FingerprintedSchema::from_subject(
+            order.clone(),
+            &resolver,
+            &FingerprintOpts::default(),
+        )
+        .unwrap();
+        assert_eq!(
+            index.find_by_fingerprint(&fingerprint),
+            Candidates::PerfectMatch(expected)
+        );
+
+        // Without resolving the reference, the fingerprint is different: content matters.
+        let unresolved =
+            Fingerprint::for_subject(&order, &MockResolver::new(), &FingerprintOpts::default())
+                .unwrap();
+        assert_eq!(index.find_by_fingerprint(&unresolved), Candidates::None);
+    }
+
+    #[test]
+    fn avro_and_json_schemas_never_cross_match() {
+        // An Avro record definition is valid JSON. Registering the same bytes as Avro and as
+        // JSON Schema must produce two unrelated fingerprints.
+        let mut index = SchemaRegistryIndex::new();
+        let resolver = MockResolver::new();
+
+        let avro = avrocado_subject();
+        let json = json_subject("avrocado-as-json", "1", "99", avocado_schema());
+        index
+            .index(&avro, &resolver, &FingerprintOpts::default())
+            .unwrap();
+        index
+            .index(&json, &resolver, &FingerprintOpts::default())
+            .unwrap();
+
+        let avro_fp =
+            Fingerprint::for_subject(&avro, &MockResolver::new(), &FingerprintOpts::default())
+                .unwrap();
+        let json_fp =
+            Fingerprint::for_subject(&json, &MockResolver::new(), &FingerprintOpts::default())
+                .unwrap();
+        assert_ne!(avro_fp, json_fp);
+
+        match index.find_by_fingerprint(&avro_fp) {
+            Candidates::PerfectMatch(found) => assert_eq!(found.schema_type, SchemaType::Avro),
+            other => panic!("expected the Avro subject only, got {other:?}"),
+        }
+        match index.find_by_fingerprint(&json_fp) {
+            Candidates::PerfectMatch(found) => assert_eq!(found.schema_type, SchemaType::Json),
+            other => panic!("expected the JSON subject only, got {other:?}"),
+        }
     }
 
     /// CYM-1200: When multiple schema versions share the same fingerprint (e.g. structurally
@@ -273,7 +432,9 @@ mod tests {
                 schema: avocado_schema().to_string(),
                 references: vec![],
             };
-            index.index(&subject, &resolver).unwrap();
+            index
+                .index(&subject, &resolver, &FingerprintOpts::default())
+                .unwrap();
         }
 
         let iterated_ids: std::collections::HashSet<SchemaId> =
@@ -310,15 +471,58 @@ mod tests {
     }
 
     fn jacksonfruit_subject() -> Subject {
+        json_subject("jacksonfruit", "3", "33", jackfruit_schema())
+    }
+
+    fn json_subject(subject: &str, version: &str, id: &str, schema: &str) -> Subject {
         Subject {
-            subject: "jacksonfruit".parse().unwrap(),
-            version: "3".parse::<SchemaVersion>().unwrap(),
-            id: "33".parse::<SchemaId>().unwrap(),
+            subject: subject.parse().unwrap(),
+            version: version.parse::<SchemaVersion>().unwrap(),
+            id: id.parse::<SchemaId>().unwrap(),
             schema_type: SchemaType::Json,
-            schema: jackfruit_schema().to_string(),
+            schema: schema.to_string(),
             references: vec![],
         }
     }
+
+    const ORDER_PLACED_A: &str = r#"{
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "io.kannika.examples.OrderPlaced",
+        "type": "object",
+        "properties": {
+            "eventType": { "type": "string" },
+            "eventId": { "type": "string" }
+        }
+    }"#;
+
+    const ORDER_PLACED_B: &str = r#"{
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "com.acme.orders.OrderPlaced",
+        "type": "object",
+        "properties": {
+            "eventType": { "type": "string" },
+            "eventId": { "type": "string" }
+        }
+    }"#;
+
+    const JSON_CUSTOMER: &str = r#"{
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Customer",
+        "type": "object",
+        "properties": { "name": { "type": "string" } },
+        "required": ["name"]
+    }"#;
+
+    const JSON_ORDER: &str = r#"{
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Order",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "customer": { "$ref": "customer.json" }
+        },
+        "required": ["id", "customer"]
+    }"#;
 
     fn order_subject() -> Subject {
         Subject {
@@ -455,23 +659,15 @@ mod tests {
     fn jackfruit_schema() -> &'static str {
         r#"
             {
-                "type": "record",
-                "name": "jackfruit",
-                "namespace": "com.example",
-                "fields": [
-                    {
-                        "name": "name",
-                        "type": "string"
-                    },
-                    {
-                        "name": "color",
-                        "type": "string"
-                    },
-                    {
-                        "name": "age",
-                        "type": "int"
-                    }
-                ]
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "title": "Jackfruit",
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "color": { "type": "string" },
+                    "age": { "type": "integer" }
+                },
+                "required": ["name"]
             }
             "#
     }

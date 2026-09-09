@@ -1,17 +1,20 @@
 use crate::context::{Context, WalkSchemaSubjectsOpts};
+use crate::mapping::MappingError::OverwritingMapping;
 use crate::mapping::conflict::{ConflictResolution, ConflictResolutionStrategy};
+use crate::mapping::fingerprint::FingerprintOpts;
 use crate::mapping::index::{
     Candidates, FingerprintedSchema, SchemaRegistryIndex, SchemaRegistryIndexError,
 };
-use crate::mapping::MappingError::OverwritingMapping;
 use crate::registry::SchemaId;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 
+pub mod avro;
 pub mod conflict;
 pub mod fingerprint;
 mod index;
+pub mod json;
 mod resolve;
 
 type IndexTask = JoinHandle<IndexTaskResult>;
@@ -89,6 +92,7 @@ impl SchemaRegistryMapping {
 pub struct MapSchemasOpts {
     pub ignore_indexing_errors: bool,
     pub on_conflict: ConflictResolutionStrategy,
+    pub fingerprint: FingerprintOpts,
 }
 
 // Map schemas from source to target context.
@@ -102,6 +106,7 @@ pub async fn map_schemas(
 ) -> Result<SchemaRegistryMapping, MappingError> {
     let index_opts = IndexOpts {
         ignore_indexing_errors: opts.ignore_indexing_errors,
+        fingerprint: opts.fingerprint.clone(),
     };
     let (source_index, target_index) = tokio::join!(
         spawn_index_task(source.clone(), index_opts.clone()),
@@ -184,6 +189,7 @@ async fn spawn_index_task(ctx: Arc<Context>, opts: IndexOpts) -> IndexTask {
 #[derive(Clone, Debug, Default)]
 struct IndexOpts {
     ignore_indexing_errors: bool,
+    fingerprint: FingerprintOpts,
 }
 
 struct Indexer {
@@ -200,7 +206,7 @@ impl Indexer {
         let mut idx = SchemaRegistryIndex::new();
         self.ctx
             .walk_schema_subjects(
-                |subject| match idx.index(&subject, &self.ctx) {
+                |subject| match idx.index(&subject, &self.ctx, &self.opts.fingerprint) {
                     Ok(()) => Ok(()),
                     Err(err) if self.opts.ignore_indexing_errors => {
                         tracing::warn!("Failed to index schema {:?}, ignoring: {}", subject, err);
