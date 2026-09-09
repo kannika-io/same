@@ -105,6 +105,8 @@ $ same map \
   --registries /path/to/registries.yaml
 ```
 
+Docker images are published to `quay.io/kannika/same` and `ghcr.io/kannika-io/same`
+for both `linux/amd64` and `linux/arm64`.
 Running this command with Docker can be done as follows,
 with the current working directory mounted to `/usr/var/same`:
 
