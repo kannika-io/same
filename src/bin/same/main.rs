@@ -4,11 +4,9 @@ mod map;
 use crate::add::AddCommand;
 use crate::map::MapCommand;
 use clap::{Parser, Subcommand};
-use std::io;
-use std::io::Write;
 use std::process::exit;
-use tracing_subscriber::prelude::*;
 use tracing_subscriber::EnvFilter;
+use tracing_subscriber::prelude::*;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -28,7 +26,7 @@ async fn main() -> anyhow::Result<()> {
             tracing::info!("program finished successfully");
         }
         Err(e) => {
-            writeln!(io::stderr(), "error: {:?}", e).unwrap();
+            eprintln!("error: {:?}", e);
         }
     }
     result.map(|_| exit(0)).map_err(|_| exit(1))

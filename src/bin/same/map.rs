@@ -18,7 +18,7 @@ use same::context::{
 use same::mapping::conflict::ConflictResolutionStrategy;
 use same::mapping::fingerprint::FingerprintOpts;
 use same::mapping::json::{DEFAULT_IGNORED_KEYWORDS, JsonCanonicalOpts};
-use same::mapping::{map_schemas, MapSchemasOpts};
+use same::mapping::{MapSchemasOpts, map_schemas};
 use same::registry::{SchemaId, SchemaReference, SchemaVersion, SubjectName};
 
 use crate::map::MapError::ContextNotFound;
@@ -186,9 +186,9 @@ impl MapCommand {
                     .missed()
                     .iter()
                     .map(|schema| MissedSchema {
-                        id: schema.id.clone(),
+                        id: schema.id,
                         subject: schema.subject.clone(),
-                        version: schema.version.clone(),
+                        version: schema.version,
                         schema: schema.schema.clone(),
                         fingerprint: schema.fingerprint.get_value_opt(),
                         references: schema.references.clone(),
@@ -344,7 +344,7 @@ impl DownloadProbe for DownloadProgressBar {
 }
 
 fn step(number: usize, emoji: Emoji, message: &str) {
-    writeln!(io::stderr(), "[{}/4] {} {}", number, emoji, message,).unwrap();
+    eprintln!("[{}/4] {} {}", number, emoji, message);
 }
 
 type DownloadTask = JoinHandle<DownloadTaskResult>;
@@ -423,6 +423,9 @@ missed:
         };
 
         let yaml = serde_yml::to_string(&output).unwrap();
-        assert!(!yaml.contains("missed"), "empty missed should be omitted from YAML");
+        assert!(
+            !yaml.contains("missed"),
+            "empty missed should be omitted from YAML"
+        );
     }
 }
