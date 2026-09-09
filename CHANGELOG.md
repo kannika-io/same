@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to this project are documented here. This file is
-generated from GitHub release notes by `scripts/generate-changelog.sh`;
+generated from GitHub release notes by scripts/generate-changelog.sh;
 do not edit it by hand.
 
 ## [0.6.0] - 2026-09-09

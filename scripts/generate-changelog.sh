@@ -50,6 +50,7 @@ section() {
 }
 
 tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
 {
   printf '# Changelog\n\n'
   printf 'All notable changes to this project are documented here. This file is\n'
