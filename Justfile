@@ -27,3 +27,8 @@ smoke-compare:
 check:
     cargo fmt --check
     cargo clippy --all-targets
+
+# Open a release PR for the given version via the Prepare release workflow (needs gh). See RELEASING.md
+prepare-release version:
+    gh workflow run prepare-release.yml -f version={{version}}
+    @echo "Dispatched. Follow with: gh run watch"

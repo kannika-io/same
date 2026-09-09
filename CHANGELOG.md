@@ -1,73 +1,43 @@
 # Changelog
-All notable changes to this project will be documented in this file.
 
-## [0.5.0] - 2026-03-19
+## [0.6.0] - 2026-09-09
 
+### 🌟 Features
+
+- [Map JSON Schema subjects by canonical fingerprint ([#1](https://github.com/kannika-io/same/pull/1))](https://github.com/kannika-io/same/commit/24c7448147fe58878c2dabe82bf30cd777633a90)
 
 ### 🐛 Bug Fixes
 
-- [Iterate all schema versions in fingerprint index](https://github.com/cymo-eu/same/commit/3bce86959ba187437b924ffcee997bdd495bff03)
+- [Ignore JSON Schema annotations and fold $ref when fingerprinting ([#2](https://github.com/kannika-io/same/pull/2))](https://github.com/kannika-io/same/commit/3297af0f7b3de64f3775357bad5bba2a6672d99d)
 
-- [Use containerized registry, add assertions, rename to 01xx prefix](https://github.com/cymo-eu/same/commit/69ee6306025e0f30b2ba692a84f9e00357575028)
+### 📚 Documentation
 
-
-### 🧪 Testing
-
-- [Add cache directory override for test isolation](https://github.com/cymo-eu/same/commit/081b442fd972e9a94c64a804f345a0ed729f8c33)
-
-- [Validate yaml output](https://github.com/cymo-eu/same/commit/135f29835430b8bee84073f0c202b2f7d0797e49)
-
+- [Update Docker example to 0.5.0](https://github.com/kannika-io/same/commit/5d924bdaabb77b6233c33890952b09e32a5293b1)
 
 ### 🧹 Miscellaneous Tasks
 
-- [🔧 update README](https://github.com/cymo-eu/same/commit/29237b227a4ab74d41bb77251a6985ec725844a7)
+- [Add BUSL-1.1 license](https://github.com/kannika-io/same/commit/77b705440dcdfa0489d4a94b3cc63757b51ab99e)
+- [Apply rustfmt 2024 style edition and fix clippy warnings ([#6](https://github.com/kannika-io/same/pull/6))](https://github.com/kannika-io/same/commit/13cbfaa30e6644f786a92be0658af7fd0e3272cb)
+- [Build multi-arch images (amd64, arm64) and publish to GHCR and Quay ([#4](https://github.com/kannika-io/same/pull/4))](https://github.com/kannika-io/same/commit/fa2023438b07ad20bcd35c3f6758bec1a3903285)
 
-- [Upgrade apache-avro from 0.17.0 to 0.21.0](https://github.com/cymo-eu/same/commit/211abcca4bb0072abf7f60406014fea7064c2cd6)
+### 📦 Dependencies
 
-- [Pin Rust 1.94 toolchain](https://github.com/cymo-eu/same/commit/e4e38352962e410f53d58656a15187377ef6ccd3)
-
-- [Upgrade to Rust edition 2024](https://github.com/cymo-eu/same/commit/0604a07a3f7444686a06c5c1a16f43908bb3267f)
-
-- [Upgrade Dockerfile Rust to 1.94](https://github.com/cymo-eu/same/commit/f342f5c76ee88fee845e159a5efae20d698a047c)
-
-- [Upgrade Alpine to 3.23](https://github.com/cymo-eu/same/commit/161a6fb52dfb7454505fde2f46f797881e607fb2)
-
-- [Update lockfile (anyhow, tokio, tracing, tracing-subscriber)](https://github.com/cymo-eu/same/commit/a06973984d054aaf7cb8bfebdc4ef3e15c5d7ae9)
-
-- [Upgrade reqwest to 0.13.2, reqwest-middleware to 0.5.1, reqwest-tracing to 0.7.0](https://github.com/cymo-eu/same/commit/7ce661de598cfb523ab12c65919b7caff650fd92)
-
-- [Upgrade keyring to 3.6.3](https://github.com/cymo-eu/same/commit/f4172c07a2569e0525bdec260d90569fe40e2d88)
-
-- [Upgrade tokio-util to 0.7.18](https://github.com/cymo-eu/same/commit/a0960ed77e4e04ed510ac91f53ba8e261d43c401)
-
-- [Upgrade clap to 4.6.0](https://github.com/cymo-eu/same/commit/5a0babd5979a9a0e4879f6d1339a59d7678c1096)
-
-- [Upgrade serde to 1.0.228](https://github.com/cymo-eu/same/commit/86edc5c4c96f478772b8233f126a9d1163f302e8)
-
-- [Upgrade serde_json to 1.0.149](https://github.com/cymo-eu/same/commit/617895a3d5064183d3e75e8c9ebb14a13642077d)
-
-- [Upgrade strum to 0.28.0, strum_macros to 0.28.0](https://github.com/cymo-eu/same/commit/d14b602228f8fe4e4004f9a8250b992d6ea9cfa9)
-
-- [Upgrade thiserror to 2.0.18](https://github.com/cymo-eu/same/commit/ad7af90420c691f17dc86509715ea725e60ad3b5)
-
-- [Upgrade dirs to 6.0.0](https://github.com/cymo-eu/same/commit/025dea7a03cc33d799a577839cdf05cfaf8f3a84)
-
-- [Upgrade tempfile to 3.27.0](https://github.com/cymo-eu/same/commit/64328bf6beb60f4437f6a08ea5e7bedb9e256d9d)
-
-- [Upgrade dialoguer to 0.12.0](https://github.com/cymo-eu/same/commit/0fa4f03758760d3b869745dac9aa4af642a31b4c)
-
-- [Upgrade indicatif to 0.18.4](https://github.com/cymo-eu/same/commit/8ef9a67c93a78ae180594fbd98ea9634339f0f73)
-
-- [Upgrade rand to 0.10.0](https://github.com/cymo-eu/same/commit/60e4ec2798c3572d7e2b77f318b3bed46d1ff502)
-
-- [Upgrade url to 2.5.8](https://github.com/cymo-eu/same/commit/2bed57edf84f3ede22a57a1b37db706b64bbb4a8)
-
-- [Upgrade multimap to 0.10.1](https://github.com/cymo-eu/same/commit/3205c875aa4b508500356978ef9ff3ae4965bd9c)
-
-- [Replace deprecated serde_yaml with serde_yml 0.0.12](https://github.com/cymo-eu/same/commit/183887344c31f970cb0f10aaa7a6f450ee8bd938)
-
-- [Add release workflow to publish Docker images to GHCR (#8)](https://github.com/cymo-eu/same/commit/072b107f59dc024d7b2310ebba233d573289fc1b)
-
-- [Bump version to 0.5.0](https://github.com/cymo-eu/same/commit/83065dc752648506ce23b988661a4593cbb38495)
+- [Upgrade anyhow to 1.0.104](https://github.com/kannika-io/same/commit/80a48837280d437689c19809337b98ff4931b45f)
+- [Upgrade clap to 4.6.6](https://github.com/kannika-io/same/commit/198207d2fdf62018949e3996d814891586618442)
+- [Upgrade indicatif to 0.18.6](https://github.com/kannika-io/same/commit/cd34c4eb9a87b517e06ef0afdb1591517209ffda)
+- [Upgrade rand to 0.10.2](https://github.com/kannika-io/same/commit/f693a86724086e5df0e7f2222b9fcdb445d8b5d5)
+- [Upgrade reqwest to 0.13.5](https://github.com/kannika-io/same/commit/d191e267367951f9b49ba310233a4dd987612a03)
+- [Upgrade reqwest-middleware to 0.5.2](https://github.com/kannika-io/same/commit/45cad68944a8f1e613705a46d3e9aff7838a28a1)
+- [Upgrade reqwest-tracing to 0.7.1](https://github.com/kannika-io/same/commit/9685b1d395cc8bc93a16594bace1e32b62cca98b)
+- [Upgrade serde to 1.0.229](https://github.com/kannika-io/same/commit/390132e3de5abeb93515e3983819c28c01ed61d6)
+- [Upgrade serde_json to 1.0.151](https://github.com/kannika-io/same/commit/a9c29d22a728282c6a0309099b9d18f731a51772)
+- [Upgrade thiserror to 2.0.20](https://github.com/kannika-io/same/commit/79bcfe927d963c1d23476ba8d4808ebe1094c377)
+- [Upgrade tokio to 1.53.1](https://github.com/kannika-io/same/commit/70fbe58ffc27ed222dfa4d0ba33dc74dee387886)
+- [Upgrade tokio-util to 0.7.19](https://github.com/kannika-io/same/commit/1a3b72d9f98e33c4def2777f56c3812e1ac27b7d)
+- [Upgrade apache-avro to 0.22.0 and digest to 0.11](https://github.com/kannika-io/same/commit/129e0db55aec2f4f5c7e007d3ad1fc304f471efe)
+- [Upgrade dirs to 7.0.0](https://github.com/kannika-io/same/commit/fb93da3b4e1cf5dd0efc85a1b25882e36a6fb23c)
+- [Upgrade jsonschema to 0.55](https://github.com/kannika-io/same/commit/a30e0c89c008d50901d9127c984580ddf2ac7d94)
+- [Upgrade keyring to 4.2.0](https://github.com/kannika-io/same/commit/44a0f7e7b343ddafe3ad02534c9ff5ecd157ffef)
+- [Upgrade testcontainers to 0.28](https://github.com/kannika-io/same/commit/bf8c8de30698fa2d0d6af5657b331e832b5fcebf)
 
 <!-- generated by git-cliff -->
