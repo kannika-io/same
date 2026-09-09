@@ -12,8 +12,13 @@ pull requests, so every change should land through a PR.
    GitHub's generated release notes to `CHANGELOG.md`, and opens a
    `release/0.7.0` pull request labelled `release`.
 
-   From a terminal with `gh` installed, `just prepare-release 0.7.0` dispatches
-   the same workflow.
+   The same workflow can be dispatched from a terminal with the GitHub CLI:
+
+   ```sh
+   gh workflow run prepare-release.yml -f version=0.7.0
+   ```
+
+   or, equivalently, `just prepare-release 0.7.0`.
 
 2. Review and merge the release PR.
 
