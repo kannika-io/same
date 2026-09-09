@@ -1,6 +1,6 @@
 use crate::common::TestEnv;
 use same::context::{Authentication, DownloadAllSchemaFilesOpts, EmptyDownloadProbe};
-use same::mapping::{map_schemas, MapSchemasOpts};
+use same::mapping::{MapSchemasOpts, map_schemas};
 use std::sync::Arc;
 
 mod common;
@@ -28,8 +28,14 @@ async fn test_map_schemas_ignores_protobuf() -> anyhow::Result<()> {
 
     let mapping = map_schemas(Arc::new(from), Arc::new(to), MapSchemasOpts::default()).await?;
 
-    assert!(mapping.matched().is_empty(), "protobuf schemas should not be matched");
-    assert!(mapping.missed().is_empty(), "protobuf schemas are not indexed");
+    assert!(
+        mapping.matched().is_empty(),
+        "protobuf schemas should not be matched"
+    );
+    assert!(
+        mapping.missed().is_empty(),
+        "protobuf schemas are not indexed"
+    );
 
     Ok(())
 }

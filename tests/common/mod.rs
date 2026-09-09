@@ -46,12 +46,12 @@ impl TestEnv {
     }
 
     pub async fn delete_all_subjects(&self) -> anyhow::Result<()> {
-        if let TestSchemaRegistry::Remote(remote) = &self.registry {
-            if remote.get_schema_registry_url().contains("confluent.cloud") {
-                return Err(anyhow::anyhow!(
-                    "Cannot delete all subjects in Confluent Schema Registry for safety reasons"
-                ));
-            }
+        if let TestSchemaRegistry::Remote(remote) = &self.registry
+            && remote.get_schema_registry_url().contains("confluent.cloud")
+        {
+            return Err(anyhow::anyhow!(
+                "Cannot delete all subjects in Confluent Schema Registry for safety reasons"
+            ));
         }
 
         let subjects = self
@@ -111,7 +111,6 @@ impl TestEnv {
             schema: schema.to_string(),
             schema_type: Some(SchemaType::Avro),
             references,
-            ..Default::default()
         };
         self.register_schema(subject_name, request).await
     }
@@ -187,10 +186,10 @@ impl TestEnv {
                 .version(subject, subject_version)
                 .await?;
 
-            if let Some(schema) = schema {
-                if schema.id == *schema_id {
-                    return Ok(Some(schema));
-                }
+            if let Some(schema) = schema
+                && schema.id == *schema_id
+            {
+                return Ok(Some(schema));
             }
         }
 

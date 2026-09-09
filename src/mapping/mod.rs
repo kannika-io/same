@@ -60,16 +60,16 @@ impl SchemaRegistryMapping {
         source: SchemaId,
         target: SchemaId,
     ) -> Result<Option<SchemaId>, MappingError> {
-        if let Some(old_mapping) = self.matched.insert(source, target) {
-            if old_mapping != target {
-                tracing::error!(
-                    "Overwriting mapping for schema: {:?} -> {:?} (was {:?})",
-                    source,
-                    target,
-                    old_mapping
-                );
-                return Err(OverwritingMapping(source, target, old_mapping));
-            }
+        if let Some(old_mapping) = self.matched.insert(source, target)
+            && old_mapping != target
+        {
+            tracing::error!(
+                "Overwriting mapping for schema: {:?} -> {:?} (was {:?})",
+                source,
+                target,
+                old_mapping
+            );
+            return Err(OverwritingMapping(source, target, old_mapping));
         }
 
         Ok(None)
@@ -212,9 +212,7 @@ impl Indexer {
                         tracing::warn!("Failed to index schema {:?}, ignoring: {}", subject, err);
                         Ok(())
                     }
-                    Err(err) => {
-                        return Err(err);
-                    }
+                    Err(err) => Err(err),
                 },
                 WalkSchemaSubjectsOpts::default(),
             )

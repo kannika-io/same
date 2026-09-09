@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use crate::context::{Context, ContextError, ContextName};
 
 pub const CURRENT_CONFIG_VERSION: u32 = 0;
-pub const CFG_FILE: &'static str = "config";
+pub const CFG_FILE: &str = "config";
 
 /// ContextRepository is a repository for storing and retrieving contexts
 pub trait ContextRepository {
@@ -65,10 +65,9 @@ impl ContextRepository for LocalContextRepository {
             .write(true)
             .truncate(true)
             .open(&self.cfg_file)
-            .map_err(|err| ContextError::IoError(err))?;
+            .map_err(ContextError::IoError)?;
 
-        serde_yml::to_writer(&mut file, &cfg)
-            .map_err(|err| ContextError::SerializationError(err))?;
+        serde_yml::to_writer(&mut file, &cfg).map_err(ContextError::SerializationError)?;
 
         Ok(())
     }
@@ -105,19 +104,17 @@ impl Config {
             .read(true)
             .write(true)
             .create(true)
+            .truncate(false)
             .open(&path)
-            .map_err(|err| ContextError::IoError(err))?;
+            .map_err(ContextError::IoError)?;
 
         // if file is empty, write default config
-        let file_length = file
-            .metadata()
-            .map_err(|err| ContextError::IoError(err))?
-            .len();
+        let file_length = file.metadata().map_err(ContextError::IoError)?.len();
 
         if file_length == 0 {
             let default_config = Config::new();
             serde_yml::to_writer(&mut file, &default_config)
-                .map_err(|err| ContextError::SerializationError(err))?;
+                .map_err(ContextError::SerializationError)?;
             return Ok(default_config);
         }
 
@@ -129,7 +126,7 @@ impl Config {
         R: io::Read,
     {
         let value: Config =
-            serde_yml::from_reader(rdr).map_err(|err| ContextError::DeserializationError(err))?;
+            serde_yml::from_reader(rdr).map_err(ContextError::DeserializationError)?;
         Ok(value)
     }
 
@@ -139,10 +136,7 @@ impl Config {
     }
 
     pub fn set_context(&mut self, context: Context) {
-        let index = self
-            .registries
-            .iter()
-            .position(|c| &c.name == &context.name);
+        let index = self.registries.iter().position(|c| c.name == context.name);
         match index {
             Some(i) => self.registries[i] = context,
             None => self.registries.push(context),
@@ -195,13 +189,19 @@ mod tests {
         repo.set_context(Context::new("data-land".into(), data_land_registry()))
             .unwrap();
 
-        repo.set_context(Context::new("data-land".into(), chocolate_factory_registry()))
-            .unwrap();
+        repo.set_context(Context::new(
+            "data-land".into(),
+            chocolate_factory_registry(),
+        ))
+        .unwrap();
 
         let result = repo.find_context(&"data-land".into());
         assert_eq!(
             result.unwrap(),
-            Some(Context::new("data-land".into(), chocolate_factory_registry()))
+            Some(Context::new(
+                "data-land".into(),
+                chocolate_factory_registry()
+            ))
         );
     }
 

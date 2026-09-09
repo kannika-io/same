@@ -2,12 +2,12 @@ use crate::registry::{
     ApiError, RegisterSchema, RegisteredSchema, Schema, SchemaId, SchemaType, SchemaVersion,
     Subject, SubjectName,
 };
-use reqwest::header::{HeaderMap, HeaderValue, ACCEPT};
+use reqwest::header::{ACCEPT, HeaderMap, HeaderValue};
 use reqwest::{Client, Response, StatusCode, Url};
 use reqwest_middleware::ClientWithMiddleware;
 use reqwest_tracing::TracingMiddleware;
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 #[derive(Debug)]
 pub struct SchemaRegistryClient {
@@ -99,7 +99,7 @@ impl SchemaRegistryClient {
 
     /// Schema client
     #[must_use]
-    pub fn schema<'a>(&self) -> SchemaClient<'_> {
+    pub fn schema(&self) -> SchemaClient<'_> {
         SchemaClient { client: self }
     }
 

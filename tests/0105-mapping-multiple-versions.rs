@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use same::context::{Authentication, DownloadAllSchemaFilesOpts, EmptyDownloadProbe};
 use same::mapping::conflict::ConflictResolutionStrategy;
-use same::mapping::{map_schemas, MapSchemasOpts};
+use same::mapping::{MapSchemasOpts, map_schemas};
 
 use crate::common::TestEnv;
 

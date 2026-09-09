@@ -1,6 +1,6 @@
 use crate::common::TestEnv;
 use same::context::{Authentication, DownloadAllSchemaFilesOpts, EmptyDownloadProbe};
-use same::mapping::{map_schemas, MapSchemasOpts};
+use same::mapping::{MapSchemasOpts, map_schemas};
 use std::sync::Arc;
 
 mod common;
@@ -29,7 +29,11 @@ async fn test_map_schemas() -> anyhow::Result<()> {
     let mapping = map_schemas(Arc::new(from), Arc::new(to), MapSchemasOpts::default()).await?;
 
     assert!(mapping.missed().is_empty(), "expected no missed schemas");
-    assert_eq!(mapping.matched().len(), 2, "expected 2 matched avro schemas");
+    assert_eq!(
+        mapping.matched().len(),
+        2,
+        "expected 2 matched avro schemas"
+    );
 
     Ok(())
 }
