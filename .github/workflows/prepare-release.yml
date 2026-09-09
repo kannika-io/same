@@ -5,7 +5,7 @@ name: Prepare release
 # GitHub with the same tag; the tagged commit then already contains the
 # changelog.
 #
-# PRs opened with the default GITHUB_TOKEN do not trigger the Build workflow.
+# See RELEASING.md. PRs opened with the default GITHUB_TOKEN do not trigger the Build workflow.
 # Add a RELEASE_TOKEN secret (a PAT with repo scope) to get CI on release PRs.
 
 on:
