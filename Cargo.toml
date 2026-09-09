@@ -33,7 +33,7 @@ tracing-futures = "0.2.5"
 clap          = { version ="4.6.6", features = ["derive"] }
 
 serde = { version = "1.0.229", features = ["derive"] }
-serde_json = { version = "1.0.149", features = [] }
+serde_json = { version = "1.0.151", features = [] }
 serde_yml = "0.0.12"
 strum = "0.28.0"
 strum_macros = "0.28.0"
