@@ -35,7 +35,7 @@ impl AddCommand {
 
         let auth_selection = dialoguer::Select::new()
             .with_prompt("Select the authentication method")
-            .items(&["Basic Auth", "None"])
+            .items(["Basic Auth", "None"])
             .default(0)
             .interact()?;
 
@@ -103,7 +103,7 @@ where
     <T as FromStr>::Err: ToString,
 {
     match env::var("TMUX") {
-        Ok(value) if value.len() > 0 => input.interact(),
+        Ok(value) if !value.is_empty() => input.interact(),
         _ => input.interact_text(),
     }
 }

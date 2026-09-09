@@ -10,11 +10,11 @@ impl crate::registry::GetSchemaRegistryClient for Context {
                     basic.basic_auth_entry_name.as_str(),
                     basic.username.as_str(),
                 )
-                .map_err(|err| SchemaRegistryClientError::KeyringError(err))?;
+                .map_err(SchemaRegistryClientError::KeyringError)?;
 
                 let password = entry
                     .get_password()
-                    .map_err(|err| SchemaRegistryClientError::KeyringError(err))?;
+                    .map_err(SchemaRegistryClientError::KeyringError)?;
 
                 SchemaRegistryClient::new_with_basic_auth(
                     self.registry.url.as_str(),

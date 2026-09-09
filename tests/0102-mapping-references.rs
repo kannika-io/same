@@ -1,6 +1,6 @@
 use common::TestEnv;
 use same::context::{Authentication, DownloadAllSchemaFilesOpts, EmptyDownloadProbe};
-use same::mapping::{map_schemas, MapSchemasOpts};
+use same::mapping::{MapSchemasOpts, map_schemas};
 use std::sync::Arc;
 
 mod common;

@@ -1,10 +1,11 @@
-use testcontainers::core::IntoContainerPort;
-use testcontainers::core::WaitFor;
-use testcontainers::runners::AsyncRunner;
 use testcontainers::ContainerAsync;
 use testcontainers::GenericImage;
 use testcontainers::ImageExt;
+use testcontainers::core::IntoContainerPort;
+use testcontainers::core::WaitFor;
+use testcontainers::runners::AsyncRunner;
 
+#[allow(clippy::large_enum_variant)] // test helper, size is irrelevant
 pub enum TestSchemaRegistry {
     Remote(RemoteSchemaRegistry),
     Containerized(ContainerizedSchemaRegistry),

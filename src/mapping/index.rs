@@ -88,16 +88,16 @@ impl FingerprintedSchema {
         let fingerprint = Fingerprint::for_subject(&subject, resolver, opts).map_err(|err| {
             SchemaRegistryIndexError::FailedToCalculateFingerprint(
                 subject.subject.clone(),
-                subject.version.clone(),
+                subject.version,
                 err.to_string(),
             )
         })?;
 
         Ok(FingerprintedSchema {
             subject: subject.subject.clone(),
-            version: subject.version.clone(),
-            id: subject.id.clone(),
-            schema_type: subject.schema_type.clone(),
+            version: subject.version,
+            id: subject.id,
+            schema_type: subject.schema_type,
             fingerprint,
             schema: subject.schema.clone(),
             references: subject.references.clone(),

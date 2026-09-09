@@ -43,13 +43,13 @@ impl Context {
         let dir = match &self.cache_dir_override {
             Some(base) => {
                 let mut path = base.clone();
-                path.push(&self.name.deref());
+                path.push(self.name.deref());
                 path
             }
             None => dirs::cache_dir()
                 .map(|mut path| {
                     path.push("io.kannika.same");
-                    path.push(&self.name.deref());
+                    path.push(self.name.deref());
                     path
                 })
                 .ok_or(ContextError::CacheDirCreationFailed)?,
@@ -79,7 +79,7 @@ impl Context {
         for subject in subjects {
             tracing::debug!("Downloading all schemas for subject {}", subject);
 
-            let subject_cache_dir = mkdir_p(&cache_dir.join(subject.deref()))?;
+            let subject_cache_dir = mkdir_p(cache_dir.join(subject.deref()))?;
 
             let versions = client
                 .subject()
