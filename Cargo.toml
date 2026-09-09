@@ -22,7 +22,7 @@ keyring = "3.6.3"
 
 #Runtime framework
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "signal", "fs", "io-util"] }
-tokio-util = { version = "0.7.18", features = ["compat"] }
+tokio-util = { version = "0.7.19", features = ["compat"] }
 
 # Logging
 tracing = "0.1"
