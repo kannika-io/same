@@ -8,8 +8,8 @@ pull requests, so every change should land through a PR.
 1. Prepare the release. Go to **Actions** → **Prepare release** → **Run
    workflow**, enter the new version (for example `0.7.0`) and run it.
 
-   The workflow bumps the version in `Cargo.toml` and `Cargo.lock`, prepends
-   GitHub's generated release notes to `CHANGELOG.md`, and opens a
+   The workflow bumps the version in `Cargo.toml` and `Cargo.lock`,
+   regenerates `CHANGELOG.md` from GitHub release notes, and opens a
    `release/0.7.0` pull request labelled `release`.
 
    The same workflow can be dispatched from a terminal with the GitHub CLI:
@@ -32,8 +32,10 @@ pull requests, so every change should land through a PR.
 
 ## Notes
 
-- `scripts/update-changelog.sh <tag>` can be run locally to preview or backfill
-  a changelog section. It is idempotent.
+- `CHANGELOG.md` is generated, not edited. `scripts/generate-changelog.sh [tag]`
+  rewrites the whole file: one section per tag, taken from the published GitHub
+  release where one exists and generated on the fly otherwise. Editing a
+  release's notes on GitHub and rerunning the script updates the file.
 - Release PRs are excluded from generated notes via `.github/release.yml`.
 - PRs opened with the default `GITHUB_TOKEN` do not trigger the `Build`
   workflow. Add a `RELEASE_TOKEN` repository secret (a personal access token

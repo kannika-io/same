@@ -1,7 +1,7 @@
 name: Prepare release
 
-# Bumps the crate version, prepends GitHub-generated release notes to
-# CHANGELOG.md and opens a release PR. After merging, create the release on
+# Bumps the crate version, regenerates CHANGELOG.md from GitHub release notes
+# and opens a release PR. After merging, create the release on
 # GitHub with the same tag; the tagged commit then already contains the
 # changelog.
 #
@@ -38,8 +38,8 @@ jobs:
           cargo update -p same
           grep -q "^version = \"${VERSION}\"" Cargo.toml
 
-      - name: Update CHANGELOG.md
-        run: scripts/update-changelog.sh "$VERSION"
+      - name: Regenerate CHANGELOG.md
+        run: scripts/generate-changelog.sh "$VERSION"
 
       - name: Open pull request
         run: |
