@@ -5,15 +5,15 @@ pull requests, so every change should land through a PR.
 
 ## Steps
 
-1. Prepare the release from your machine:
+1. Prepare the release. Go to **Actions** → **Prepare release** → **Run
+   workflow**, enter the new version (for example `0.7.0`) and run it.
 
-   ```sh
-   just prepare-release 0.7.0
-   ```
+   The workflow bumps the version in `Cargo.toml` and `Cargo.lock`, prepends
+   GitHub's generated release notes to `CHANGELOG.md`, and opens a
+   `release/0.7.0` pull request labelled `release`.
 
-   This dispatches the `Prepare release` workflow, which bumps the version in
-   `Cargo.toml` and `Cargo.lock`, prepends GitHub's generated release notes to
-   `CHANGELOG.md`, and opens a `release/0.7.0` pull request labelled `release`.
+   From a terminal with `gh` installed, `just prepare-release 0.7.0` dispatches
+   the same workflow.
 
 2. Review and merge the release PR.
 
