@@ -1,9 +1,9 @@
 name: Prepare release
 
 # Bumps the crate version, replaces CHANGELOG.md with the git-cliff notes for
-# the new version only, and opens a
-# release PR. After merging, create the release on GitHub with the same tag;
-# the tagged commit then already contains the changelog.
+# the new version only, and opens a release PR. After merging, create the
+# release on GitHub with the same tag; the tagged commit then already contains
+# the changelog.
 #
 # See RELEASING.md. PRs opened with the default GITHUB_TOKEN do not trigger the Build workflow.
 # Add a RELEASE_TOKEN secret (a PAT with repo scope) to get CI on release PRs.
