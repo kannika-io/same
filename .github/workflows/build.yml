@@ -45,6 +45,7 @@ jobs:
 
   docker:
     name: Docker build ${{ matrix.platform }}
+    needs: [check, test]
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
