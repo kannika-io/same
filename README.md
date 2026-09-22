@@ -1,14 +1,14 @@
 
 # SAME: Schema Automated Mapping Engine by Kannika.io
 
-> SAME is an open-source CLI tool that automatically maps schemas between different Schema Registry instances.  
+> SAME is a source-available CLI tool that automatically maps schemas between different Schema Registry instances.  
 > Developed and maintained by [Kannika.io](https://kannika.io), the Kafka reliability platform.
 
 SAME eliminates the manual work of migrating or syncing Avro schemas across registries, whether you're consolidating environments, migrating to Confluent Cloud, or keeping staging in sync with production.
 
 ## What is Kannika.io?
 
-[Kannika.io](https://kannika.io) builds tools for Kafka observability, reliability, and schema management. SAME is our open-source CLI for teams managing schemas across multiple Schema Registry environments.
+[Kannika.io](https://kannika.io) builds tools for Kafka observability, reliability, and schema management. SAME is our source-available CLI for teams managing schemas across multiple Schema Registry environments.
 
 `SAME` is part of Kannika's [open source and source-available Kafka tools](https://www.kannika.io/kannika-guides/open-source-kafka-tools/)
 
