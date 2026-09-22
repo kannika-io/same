@@ -10,6 +10,8 @@ SAME eliminates the manual work of migrating or syncing Avro schemas across regi
 
 [Kannika.io](https://kannika.io) builds tools for Kafka observability, reliability, and schema management. SAME is our open-source CLI for teams managing schemas across multiple Schema Registry environments.
 
+`SAME` is part of Kannika's [open source and source-available Kafka tools](https://www.kannika.io/kannika-guides/open-source-kafka-tools/)
+
 ---
 
 ## Features
